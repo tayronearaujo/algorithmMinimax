@@ -1,64 +1,90 @@
-const initialBoard = [
-    ['','',''],
-    ['','',''],
-    ['','',''],
+const initialBoard = Array.from(Array(9).keys());
+
+const winCombos = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [6, 4, 2]
 ]
 
-// const teste = [
-//     [["x","",""],["","",""],["","",""]],
-//     [["","x",""],["","",""],["","",""]],
-//     [["","","x"],["","",""],["","",""]],
-//     [["","",""],["x","",""],["","",""]],
-//     [["","",""],["","x",""],["","",""]],
-//     [["","",""],["","","x"],["","",""]],
-//     [["","",""],["","",""],["x","",""]],
-//     [["","",""],["","",""],["","x",""]],
-//     [["","",""],["","",""],["","","x"]]
-// ]
+function emptyBoardPositions(board) {
+	return board.filter(s => typeof s == 'number');
+}
 
-
-// const teste1 = [
-//     ["x","",""],
-//     ["","f",""],
-//     ["","","g"]
-// ] 
-
-// for(let i = 0; i < teste1.length; i++){
-   
-//     console.log(teste1[0][i][i] )
-     
-
-function possiblesplays(board, player) {
-    const allPositions = []
-    for(let i = 0; i < board.length; i++){
-        for(let j = 0; j < board.length; j++){
-            const newBoard = JSON.parse(JSON.stringify(board))
-            newBoard[i][j] = player
-
-            console.log(newBoard)
-
-            allPositions.push(newBoard)
-        }   
+function checkWinner(mimic_board, player) {
+    let winner = null;
+    let plays = [];
+    for (let i = 0; i < mimic_board.length; i++) {
+        if (mimic_board[i] === player) {
+            plays.push(i);
+        }
     }
-    return allPositions
-}   
-
-function min(board, player){
-    const possibleMin = possiblesplays(board, player)
-    console.log('chamou min')
-    console.log (JSON.stringify( possibleMin))
-
-    max(possibleMin,player)
+    for (let i = 0; i < winCombos.length; i++) {
+        if (plays.includes(winCombos[i][0]) && plays.includes(winCombos[i][1]) &&
+            plays.includes(winCombos[i][2])) {
+            winner = { i, player };
+            break;
+        }
+    }
+    return winner;
 }
 
-function max(board, player){
-    const possibleMax = possiblesplays(board, player)
-    console.log('chamou max')
+function minimax(currentBoard, player) {
+	let openSpots = emptyBoardPositions(currentBoard);
 
-    console.log (JSON.stringify( possibleMax))
-    console.log('\n')
-    min(possibleMax, 'o')
+	if (checkWinner(currentBoard, 'O')) {
+		return {score: -10};
+
+	} else if (checkWinner(currentBoard, 'X')) {
+		return {score: 10};
+	} else if (openSpots.length === 0) {
+		return {score: 0};
+	}
+
+
+	let moves = [];
+	for (let i = 0; i < openSpots.length; i++) {
+		let move = {};
+		move.index = currentBoard[openSpots[i]];
+		currentBoard[openSpots[i]] = player;
+
+
+
+		if (player == 'X') {
+			let result = minimax(currentBoard, 'O');
+            console.log(result)
+			move.score = result.score;   
+		} 
+        else {
+			let result = minimax(currentBoard, 'X');
+			move.score = result.score;
+		}
+		currentBoard[openSpots[i]] = move.index;
+		moves.push(move);
+	}
+
+	let bestMove;
+	if(player === 'X') {
+		let bestScore = -Infinity;
+		for(let i = 0; i < moves.length; i++) {
+			if (moves[i].score > bestScore) {
+				bestScore = moves[i].score;
+				bestMove = i;
+			}
+		}
+	} else {
+		let bestScore = Infinity;
+		for(var i = 0; i < moves.length; i++) {
+			if (moves[i].score < bestScore) {
+				bestScore = moves[i].score;
+				bestMove = i;
+			}
+		}
+	}
+
+	return moves[bestMove];
 }
-
-max(initialBoard,'x')
-
